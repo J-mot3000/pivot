@@ -12,14 +12,24 @@ export function TagInput({ label, value, onChange }: TagInputProps) {
       {label}
       <input
         value={formatTags(value)}
-        onChange={(event) =>
-          onChange(
-            event.target.value
+        onChange={(event) => {
+          const input = event.target.value
+          const tags = input
+            .split(',')
+            .map((item) => item.trim())
+            .filter(Boolean)
+          onChange(tags)
+        }}
+        onBlur={(event) => {
+          const input = event.target.value
+          if (input.endsWith(',')) {
+            const tags = input
               .split(',')
               .map((item) => item.trim())
-              .filter(Boolean),
-          )
-        }
+              .filter(Boolean)
+            onChange(tags)
+          }
+        }}
       />
     </label>
   )
