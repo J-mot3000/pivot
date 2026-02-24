@@ -3,13 +3,13 @@ import { Hero } from '../components/layout/Hero'
 import { ResumeSection } from '../components/resume/ResumeSection'
 import { PortfolioSection } from '../components/portfolio/PortfolioSection'
 import { ContactSection } from '../components/contact/ContactSection'
-import type { Contact } from '../types'
+import type { ContactInfo } from '../types'
 
 interface HomePageProps {
   profile: Profile
   resume: Resume
   portfolio: PortfolioItem[]
-  contact: Contact
+  contact: ContactInfo
 }
 
 export function HomePage({ profile, resume, portfolio, contact }: HomePageProps) {

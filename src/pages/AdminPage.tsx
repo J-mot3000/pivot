@@ -1,9 +1,8 @@
-import type { Resume, PortfolioItem, Education, Experience, SiteData } from '../types'
+import type { Resume, PortfolioItem, Education, Experience } from '../types'
+import { TagInput } from '../components/admin/TagInput'
 import { ExperienceEditor } from '../components/admin/ExperienceEditor'
 import { EducationEditor } from '../components/admin/EducationEditor'
 import { PortfolioEditor } from '../components/admin/PortfolioEditor'
-import { TagInput } from '../components/admin/TagInput'
-import { isSiteData } from '../utils/validators'
 
 interface AdminPageProps {
   draftResume: Resume
@@ -91,117 +90,130 @@ export function AdminPage({
   }
 
   return (
-    <section className="admin">
-      <div className="section-header">
-        <div>
-          <p className="eyebrow">Admin Console</p>
-          <h2>Resume Editor</h2>
-          <p className="muted">
-            Changes are stored in your browser. Export the JSON to deploy on GitHub Pages.
-          </p>
-        </div>
-        <div className="admin-actions">
-          <button className="ghost" onClick={onExport}>
-            Export JSON
-          </button>
-          <label className="file-input">
-            Import JSON
-            <input
-              type="file"
-              accept="application/json"
-              onChange={(event) => handleFileImport(event.target.files?.[0] ?? null)}
-            />
-          </label>
-          <button className="ghost" onClick={onReset}>
-            Reset to Defaults
-          </button>
-        </div>
-      </div>
-
-      {error && <div className="status-card error">{error}</div>}
-
-      <div className="admin-grid">
-        <div className="admin-card">
-          <h3>Summary</h3>
-          <label>
-            Headline
-            <input
-              value={draftResume.headline}
-              onChange={(event) => onResumeChange('headline', event.target.value)}
-            />
-          </label>
-          <label>
-            Summary
-            <textarea
-              rows={4}
-              value={draftResume.summary}
-              onChange={(event) => onResumeChange('summary', event.target.value)}
-            />
-          </label>
+    <>
+      <section className="admin">
+        <div className="section-header">
+          <div>
+            <p className="eyebrow">Admin Console</p>
+            <h2>Resume Editor</h2>
+            <p className="muted">
+              Changes are stored in your browser. Export the JSON to deploy on GitHub Pages.
+            </p>
+          </div>
+          <div className="admin-actions">
+            <button className="ghost" onClick={onExport}>
+              Export JSON
+            </button>
+            <label className="file-input">
+              Import JSON
+              <input
+                type="file"
+                accept="application/json"
+                onChange={(event) => handleFileImport(event.target.files?.[0] ?? null)}
+              />
+            </label>
+            <button className="ghost" onClick={onReset}>
+              Reset to Defaults
+            </button>
+          </div>
         </div>
 
-        <div className="admin-card">
-          <h3>Skills</h3>
-          <TagInput
-            label="Comma-separated skills"
-            value={draftResume.skills}
-            onChange={(skills) => onResumeChange('skills', skills)}
+        {error && <div className="status-card error">{error}</div>}
+
+        <div className="admin-grid">
+          <div className="admin-card">
+            <h3>Summary</h3>
+            <label>
+              Headline
+              <input
+                value={draftResume.headline}
+                onChange={(event) => onResumeChange('headline', event.target.value)}
+              />
+            </label>
+            <label>
+              Summary
+              <textarea
+                rows={4}
+                value={draftResume.summary}
+                onChange={(event) => onResumeChange('summary', event.target.value)}
+              />
+            </label>
+          </div>
+
+          <div className="admin-card">
+            <h3>Skills</h3>
+            <TagInput
+              label="Comma-separated skills"
+              value={draftResume.skills}
+              onChange={(skills: string[]) => onResumeChange('skills', skills)}
+            />
+          </div>
+
+          <ExperienceEditor
+            experience={draftResume.experience}
+            onChange={handleExperienceChange}
+            onAdd={() =>
+              onResumeChange('experience', [
+                ...draftResume.experience,
+                createExperience(),
+              ])
+            }
+            onRemove={(index: number) =>
+              onResumeChange(
+                'experience',
+                draftResume.experience.filter((_, i) => i !== index),
+              )
+            }
           />
-        </div>
 
-        <ExperienceEditor
-          experience={draftResume.experience}
-          onChange={handleExperienceChange}
-          onAdd={() =>
-            onResumeChange('experience', [...draftResume.experience, createExperience()])
-          }
-          onRemove={(index) =>
-            onResumeChange(
-              'experience',
-              draftResume.experience.filter((_, i) => i !== index),
-            )
-          }
-        />
-
-        <EducationEditor
-          education={draftResume.education}
-          onChange={handleEducationChange}
-          onAdd={() =>
-            onResumeChange('education', [...draftResume.education, createEducation()])
-          }
-          onRemove={(index) =>
-            onResumeChange(
-              'education',
-              draftResume.education.filter((_, i) => i !== index),
-            )
-          }
-        />
-
-        <div className="admin-card">
-          <h3>Certifications</h3>
-          <TagInput
-            label="Comma-separated certifications"
-            value={draftResume.certifications}
-            onChange={(certs) => onResumeChange('certifications', certs)}
+          <EducationEditor
+            education={draftResume.education}
+            onChange={handleEducationChange}
+            onAdd={() =>
+              onResumeChange('education', [
+                ...draftResume.education,
+                createEducation(),
+              ])
+            }
+            onRemove={(index: number) =>
+              onResumeChange(
+                'education',
+                draftResume.education.filter((_, i) => i !== index),
+              )
+            }
           />
-        </div>
 
-        <PortfolioEditor
-          portfolio={draftPortfolio}
-          onChange={handlePortfolioChange}
-          onAdd={() => onPortfolioChange([...draftPortfolio, createPortfolioItem()])}
-          onRemove={(index) =>
-            onPortfolioChange(draftPortfolio.filter((_, i) => i !== index))
-          }
-        />
+          <div className="admin-card">
+            <h3>Certifications</h3>
+            <TagInput
+              label="Comma-separated certifications"
+              value={draftResume.certifications}
+              onChange={(certs: string[]) => onResumeChange('certifications', certs)}
+            />
+          </div>
 
-        <div className="admin-footer">
-          <button className="primary" onClick={onSave} disabled={!isDirty}>
-            Save Resume Changes
-          </button>
-          {!isDirty && <span className="muted">All changes are saved.</span>}
+          <PortfolioEditor
+            portfolio={draftPortfolio}
+            onChange={handlePortfolioChange}
+            onAdd={() =>
+              onPortfolioChange([
+                ...draftPortfolio,
+                createPortfolioItem(),
+              ])
+            }
+            onRemove={(index: number) =>
+              onPortfolioChange(draftPortfolio.filter((_, i) => i !== index))
+            }
+          />
+
+          <div className="admin-footer">
+            <button className="primary" onClick={onSave} disabled={!isDirty}>
+              Save Resume Changes
+            </button>
+            {!isDirty && <span className="muted">All changes are saved.</span>}
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </>
   )
 }

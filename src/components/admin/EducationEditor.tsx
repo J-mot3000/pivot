@@ -1,4 +1,4 @@
-import React from 'react'
+
 import type { Education } from '../../types'
 
 interface EducationEditorProps {

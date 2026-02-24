@@ -1,8 +1,8 @@
-import type { Contact } from '../../types'
 import { ContactForm } from './ContactForm'
+import type { ContactInfo } from '../../types'
 
 interface ContactSectionProps {
-  contact: Contact
+  contact: ContactInfo
 }
 
 export function ContactSection({ contact }: ContactSectionProps) {
