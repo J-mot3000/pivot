@@ -39,13 +39,28 @@ function App() {
     const loadData = async () => {
       try {
         const stored = await loadStoredData()
-        const fallback = await fetchDefaultData()
-        const resolved = stored ?? fallback
-        setDefaultData(fallback)
-        setData(resolved)
-        setDraftProfile(structuredClone(resolved.profile))
-        setDraftResume(structuredClone(resolved.resume))
-        setDraftPortfolio(structuredClone(resolved.portfolio))
+        if (stored) {
+          setData(stored)
+          setDraftProfile(structuredClone(stored.profile))
+          setDraftResume(structuredClone(stored.resume))
+          setDraftPortfolio(structuredClone(stored.portfolio))
+        }
+
+        try {
+          const fallback = await fetchDefaultData()
+          setDefaultData(fallback)
+          if (!stored) {
+            setData(fallback)
+            setDraftProfile(structuredClone(fallback.profile))
+            setDraftResume(structuredClone(fallback.resume))
+            setDraftPortfolio(structuredClone(fallback.portfolio))
+          }
+        } catch (fetchError) {
+          if (!stored) {
+            throw fetchError
+          }
+          setDefaultData(stored)
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unable to load data')
       } finally {
