@@ -15,7 +15,7 @@ export function ResumeSection({ resume }: ResumeSectionProps) {
           <p className="eyebrow">Resume</p>
           <h2>{resume.headline}</h2>
         </div>
-        <span className="muted">Updated for GitHub Pages JSON workflow</span>
+        <span className="muted">Brought to you by Firebase and GitHub Pages</span>
       </div>
 
       <div className="resume-grid">

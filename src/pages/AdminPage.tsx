@@ -16,8 +16,7 @@ interface AdminPageProps {
   onSave: () => void
   onReset: () => void
   onExport: () => void
-  onImport: (file: File | null) => Promise<void>
-  onError: (error: string) => void
+  onLogout: () => void
 }
 
 const createExperience = (): Experience => ({
@@ -62,8 +61,7 @@ export function AdminPage({
   onSave,
   onReset,
   onExport,
-  onImport,
-  onError,
+  onLogout,
 }: AdminPageProps) {
   const handleExperienceChange = (index: number, next: Experience) => {
     const updated = [...draftResume.experience]
@@ -83,16 +81,6 @@ export function AdminPage({
     onPortfolioChange(updated)
   }
 
-  const handleFileImport = async (file: File | null) => {
-    if (!file) return
-    try {
-      onError('')
-      await onImport(file)
-    } catch (err) {
-      onError(err instanceof Error ? err.message : 'Could not import JSON')
-    }
-  }
-
   return (
     <>
       <section className="admin">
@@ -101,23 +89,18 @@ export function AdminPage({
             <p className="eyebrow">Admin Console</p>
             <h2>Resume Editor</h2>
             <p className="muted">
-              Changes are stored in your browser. Export the JSON to deploy on GitHub Pages.
+              
             </p>
           </div>
           <div className="admin-actions">
             <button className="ghost" onClick={onExport}>
               Export JSON
             </button>
-            <label className="file-input">
-              Import JSON
-              <input
-                type="file"
-                accept="application/json"
-                onChange={(event) => handleFileImport(event.target.files?.[0] ?? null)}
-              />
-            </label>
             <button className="ghost" onClick={onReset}>
               Reset to Defaults
+            </button>
+            <button className="ghost danger" onClick={onLogout}>
+              Logout
             </button>
           </div>
         </div>

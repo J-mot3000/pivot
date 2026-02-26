@@ -4,10 +4,11 @@ import type { PortfolioItem, Profile, Resume, SiteData } from './types'
 import { fetchDefaultData } from './utils/data'
 import { clearStoredData, loadStoredData, saveStoredData } from './utils/storage'
 import { migrateToFirebase } from './utils/migrate'
-import { isSiteData } from './utils/validators'
+import { onAuthChange, logout } from './utils/authService'
 import { Header } from './components/layout/Header'
 import { HomePage } from './pages/HomePage'
 import { AdminPage } from './pages/AdminPage'
+import { LoginModal } from './components/admin/LoginModal'
 
 function App() {
   const [data, setData] = useState<SiteData | null>(null)
@@ -17,6 +18,8 @@ function App() {
   const [view, setView] = useState<'home' | 'admin'>(() =>
     window.location.hash === '#admin' ? 'admin' : 'home',
   )
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
   const [draftProfile, setDraftProfile] = useState<Profile | null>(null)
   const [draftResume, setDraftResume] = useState<Resume | null>(null)
   const [draftPortfolio, setDraftPortfolio] = useState<PortfolioItem[] | null>(null)
@@ -27,6 +30,29 @@ function App() {
     }
     window.addEventListener('hashchange', syncHash)
     return () => window.removeEventListener('hashchange', syncHash)
+  }, [])
+
+  useEffect(() => {
+    const unsubscribe = onAuthChange((user) => {
+      setIsAuthenticated(!!user)
+      if (!user && view === 'admin') {
+        setView('home')
+        window.location.hash = '#home'
+      }
+    })
+    return unsubscribe
+  }, [view])
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl+Alt+L or Cmd+Alt+L to show login
+      if ((e.ctrlKey || e.metaKey) && e.altKey && e.key === 'l') {
+        e.preventDefault()
+        setIsLoginModalOpen(true)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
   useEffect(() => {
@@ -122,6 +148,12 @@ function App() {
     await saveStoredData(next)
   }
 
+  const handleLogout = async () => {
+    await logout()
+    setView('home')
+    window.location.hash = '#home'
+  }
+
   const resetResume = async () => {
     if (!defaultData) return
     await clearStoredData()
@@ -143,26 +175,16 @@ function App() {
     URL.revokeObjectURL(url)
   }
 
-  const importJson = async (file: File | null) => {
-    if (!file) return
-    const text = await file.text()
-    const parsed = JSON.parse(text) as unknown
-    if (!isSiteData(parsed)) {
-      throw new Error('That file does not match the required data shape.')
-    }
-    setError('')
-    setData(parsed)
-    setDraftProfile(structuredClone(parsed.profile))
-    setDraftResume(structuredClone(parsed.resume))
-    setDraftPortfolio(structuredClone(parsed.portfolio))
-    await saveStoredData(parsed)
-  }
 
   return (
     <div className="page">
-      <Header profile={profile} />
+      <Header
+        profile={profile}
+        isAuthenticated={isAuthenticated}
+        onLoginClick={() => setIsLoginModalOpen(true)}
+      />
 
-      {view === 'admin' ? (
+      {view === 'admin' && isAuthenticated ? (
         draftProfile && draftResume && draftPortfolio ? (
           <AdminPage
             draftProfile={draftProfile}
@@ -176,8 +198,7 @@ function App() {
             onSave={persistResume}
             onReset={resetResume}
             onExport={exportJson}
-            onImport={importJson}
-            onError={setError}
+            onLogout={handleLogout}
           />
         ) : null
       ) : (
@@ -188,6 +209,15 @@ function App() {
           contact={contact}
         />
       )}
+
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        onSuccess={() => {
+          setIsLoginModalOpen(false)
+          window.location.hash = '#admin'
+        }}
+      />
     </div>
   )
 }

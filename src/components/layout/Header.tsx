@@ -2,12 +2,18 @@ import type { Profile } from '../../types'
 
 interface HeaderProps {
   profile: Profile
+  isAuthenticated?: boolean
+  onLoginClick?: () => void
 }
 
-export function Header({ profile }: HeaderProps) {
+export function Header({ profile, isAuthenticated, onLoginClick }: HeaderProps) {
+  const handleBrandDoubleClick = () => {
+    onLoginClick?.()
+  }
+
   return (
     <header className="nav">
-      <div className="brand">
+      <div className="brand" onDoubleClick={handleBrandDoubleClick}>
         <span className="brand-dot" />
         <span>{profile.name}</span>
       </div>
@@ -15,7 +21,7 @@ export function Header({ profile }: HeaderProps) {
         <a href="#resume">Resume</a>
         <a href="#portfolio">Portfolio</a>
         <a href="#contact">Contact</a>
-        <a href="#admin">Admin</a>
+        {isAuthenticated && <a href="#admin">Admin</a>}
       </nav>
     </header>
   )
