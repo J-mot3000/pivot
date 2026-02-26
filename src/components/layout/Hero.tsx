@@ -4,6 +4,13 @@ interface HeroProps {
   profile: Profile
 }
 
+const resolveAssetUrl = (url: string) => {
+  if (!url) return url
+  if (/^https?:\/\//i.test(url)) return url
+  const trimmed = url.replace(/^\//, '')
+  return `${import.meta.env.BASE_URL}${trimmed}`
+}
+
 export function Hero({ profile }: HeroProps) {
   return (
     <section className="hero">
@@ -25,7 +32,11 @@ export function Hero({ profile }: HeroProps) {
           </a>
         </div>
       </div>
-      <img className="hero-avatar" src={profile.avatarUrl} alt={profile.name} />
+      <img
+        className="hero-avatar"
+        src={resolveAssetUrl(profile.avatarUrl)}
+        alt={profile.name}
+      />
     </section>
   )
 }

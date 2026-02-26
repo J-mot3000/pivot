@@ -1,24 +1,37 @@
 import type { SiteData } from '../types'
+import { db } from './firebase'
+import { doc, getDoc, setDoc } from 'firebase/firestore'
 
-const STORAGE_KEY = 'portfolio-site-data'
+// const STORAGE_KEY = 'portfolio-site-data'
 
-export const loadStoredData = (): SiteData | null => {
-  if (typeof window === 'undefined') return null
-  const raw = localStorage.getItem(STORAGE_KEY)
-  if (!raw) return null
+export const loadStoredData = async (): Promise<SiteData | null> => {
   try {
-    return JSON.parse(raw) as SiteData
-  } catch {
+    const docRef = doc(db, 'portfolio', 'siteData')
+    const docSnap = await getDoc(docRef)
+    if (docSnap.exists()) {
+      return docSnap.data() as SiteData
+    }
+    return null
+  } catch (error) {
+    console.error('Error loading data:', error)
     return null
   }
 }
 
-export const saveStoredData = (data: SiteData) => {
-  if (typeof window === 'undefined') return
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+export const saveStoredData = async (data: SiteData) => {
+  try {
+    const docRef = doc(db, 'portfolio', 'siteData')
+    await setDoc(docRef, data)
+  } catch (error) {
+    console.error('Error saving data:', error)
+  }
 }
 
-export const clearStoredData = () => {
-  if (typeof window === 'undefined') return
-  localStorage.removeItem(STORAGE_KEY)
+export const clearStoredData = async () => {
+  try {
+    const docRef = doc(db, 'portfolio', 'siteData')
+    await setDoc(docRef, {})
+  } catch (error) {
+    console.error('Error clearing data:', error)
+  }
 }

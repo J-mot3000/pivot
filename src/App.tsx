@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import './App.css'
-import type { PortfolioItem, Resume, SiteData } from './types'
+import type { PortfolioItem, Profile, Resume, SiteData } from './types'
 import { fetchDefaultData } from './utils/data'
 import { clearStoredData, loadStoredData, saveStoredData } from './utils/storage'
+import { migrateToFirebase } from './utils/migrate'
 import { isSiteData } from './utils/validators'
 import { Header } from './components/layout/Header'
 import { HomePage } from './pages/HomePage'
@@ -16,6 +17,7 @@ function App() {
   const [view, setView] = useState<'home' | 'admin'>(() =>
     window.location.hash === '#admin' ? 'admin' : 'home',
   )
+  const [draftProfile, setDraftProfile] = useState<Profile | null>(null)
   const [draftResume, setDraftResume] = useState<Resume | null>(null)
   const [draftPortfolio, setDraftPortfolio] = useState<PortfolioItem[] | null>(null)
 
@@ -28,13 +30,20 @@ function App() {
   }, [])
 
   useEffect(() => {
+    if (import.meta.env.DEV) {
+      ;(window as any).migratePortfolio = migrateToFirebase
+    }
+  }, [])
+
+  useEffect(() => {
     const loadData = async () => {
       try {
-        const stored = loadStoredData()
+        const stored = await loadStoredData()
         const fallback = await fetchDefaultData()
         const resolved = stored ?? fallback
         setDefaultData(fallback)
         setData(resolved)
+        setDraftProfile(structuredClone(resolved.profile))
         setDraftResume(structuredClone(resolved.resume))
         setDraftPortfolio(structuredClone(resolved.portfolio))
       } catch (err) {
@@ -48,12 +57,13 @@ function App() {
   }, [])
 
   const isDirty = useMemo(() => {
-    if (!data || !draftResume || !draftPortfolio) return false
+    if (!data || !draftProfile || !draftResume || !draftPortfolio) return false
     return (
+      JSON.stringify(data.profile) !== JSON.stringify(draftProfile) ||
       JSON.stringify(data.resume) !== JSON.stringify(draftResume) ||
       JSON.stringify(data.portfolio) !== JSON.stringify(draftPortfolio)
     )
-  }, [data, draftPortfolio, draftResume])
+  }, [data, draftPortfolio, draftProfile, draftResume])
 
   if (isLoading) {
     return (
@@ -77,21 +87,31 @@ function App() {
     setDraftResume((prev) => (prev ? { ...prev, [key]: value } : prev))
   }
 
+  const handleProfileChange = <K extends keyof Profile>(key: K, value: Profile[K]) => {
+    setDraftProfile((prev) => (prev ? { ...prev, [key]: value } : prev))
+  }
+
   const handlePortfolioChange = (portfolio: PortfolioItem[]) => {
     setDraftPortfolio(portfolio)
   }
 
-  const persistResume = () => {
-    if (!draftResume || !draftPortfolio) return
-    const next = { ...data, resume: draftResume, portfolio: draftPortfolio }
+  const persistResume = async () => {
+    if (!draftProfile || !draftResume || !draftPortfolio) return
+    const next = {
+      ...data,
+      profile: draftProfile,
+      resume: draftResume,
+      portfolio: draftPortfolio,
+    }
     setData(next)
-    saveStoredData(next)
+    await saveStoredData(next)
   }
 
-  const resetResume = () => {
+  const resetResume = async () => {
     if (!defaultData) return
-    clearStoredData()
+    await clearStoredData()
     setData(defaultData)
+    setDraftProfile(structuredClone(defaultData.profile))
     setDraftResume(structuredClone(defaultData.resume))
     setDraftPortfolio(structuredClone(defaultData.portfolio))
   }
@@ -117,9 +137,10 @@ function App() {
     }
     setError('')
     setData(parsed)
+    setDraftProfile(structuredClone(parsed.profile))
     setDraftResume(structuredClone(parsed.resume))
     setDraftPortfolio(structuredClone(parsed.portfolio))
-    saveStoredData(parsed)
+    await saveStoredData(parsed)
   }
 
   return (
@@ -127,12 +148,14 @@ function App() {
       <Header profile={profile} />
 
       {view === 'admin' ? (
-        draftResume && draftPortfolio ? (
+        draftProfile && draftResume && draftPortfolio ? (
           <AdminPage
+            draftProfile={draftProfile}
             draftResume={draftResume}
             draftPortfolio={draftPortfolio}
             isDirty={isDirty}
             error={error}
+            onProfileChange={handleProfileChange}
             onResumeChange={handleResumeChange}
             onPortfolioChange={handlePortfolioChange}
             onSave={persistResume}

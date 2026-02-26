@@ -1,14 +1,16 @@
-import type { Resume, PortfolioItem, Education, Experience } from '../types'
+import type { Profile, Resume, PortfolioItem, Education, Experience } from '../types'
 import { TagInput } from '../components/admin/TagInput'
 import { ExperienceEditor } from '../components/admin/ExperienceEditor'
 import { EducationEditor } from '../components/admin/EducationEditor'
 import { PortfolioEditor } from '../components/admin/PortfolioEditor'
 
 interface AdminPageProps {
+  draftProfile: Profile
   draftResume: Resume
   draftPortfolio: PortfolioItem[]
   isDirty: boolean
   error: string
+  onProfileChange: <K extends keyof Profile>(key: K, value: Profile[K]) => void
   onResumeChange: <K extends keyof Resume>(key: K, value: Resume[K]) => void
   onPortfolioChange: (portfolio: PortfolioItem[]) => void
   onSave: () => void
@@ -49,10 +51,12 @@ const createPortfolioItem = (): PortfolioItem => ({
 })
 
 export function AdminPage({
+  draftProfile,
   draftResume,
   draftPortfolio,
   isDirty,
   error,
+  onProfileChange,
   onResumeChange,
   onPortfolioChange,
   onSave,
@@ -121,6 +125,67 @@ export function AdminPage({
         {error && <div className="status-card error">{error}</div>}
 
         <div className="admin-grid">
+          <div className="admin-card">
+            <h3>Profile</h3>
+            <label>
+              Name
+              <input
+                value={draftProfile.name}
+                onChange={(event) => onProfileChange('name', event.target.value)}
+              />
+            </label>
+            <label>
+              Title
+              <input
+                value={draftProfile.title}
+                onChange={(event) => onProfileChange('title', event.target.value)}
+              />
+            </label>
+            <label>
+              Summary
+              <textarea
+                rows={3}
+                value={draftProfile.summary}
+                onChange={(event) => onProfileChange('summary', event.target.value)}
+              />
+            </label>
+            <label>
+              Location
+              <input
+                value={draftProfile.location}
+                onChange={(event) => onProfileChange('location', event.target.value)}
+              />
+            </label>
+            <label>
+              Email
+              <input
+                value={draftProfile.email}
+                onChange={(event) => onProfileChange('email', event.target.value)}
+              />
+            </label>
+            <label>
+              Phone
+              <input
+                value={draftProfile.phone}
+                onChange={(event) => onProfileChange('phone', event.target.value)}
+              />
+            </label>
+            <label>
+              Website
+              <input
+                value={draftProfile.website}
+                onChange={(event) => onProfileChange('website', event.target.value)}
+              />
+            </label>
+            <label>
+              Avatar URL
+              <input
+                value={draftProfile.avatarUrl}
+                onChange={(event) => onProfileChange('avatarUrl', event.target.value)}
+              />
+            </label>
+          </div>
+
           <div className="admin-card">
             <h3>Summary</h3>
             <label>
